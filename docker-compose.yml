@@ -1,0 +1,40 @@
+version: "3.3"
+services:
+  ldes-server:
+    container_name: basic_ldes-server
+    image: ldes/ldes-server:2.0.1-SNAPSHOT
+    environment:
+      - SPRING_CONFIG_LOCATION=/config/
+    volumes:
+      - ./ldes-server.yml:/config/application.yml:ro
+    ports:
+      - 8080:8080
+    networks:
+      - ldes
+    depends_on:
+      - ldes-mongodb
+  ldes-mongodb:
+    container_name: quick_start_ldes-mongodb
+    image: mongo:6.0.4
+    ports:
+      - 27017:27017
+    networks:
+      - ldes
+  ldio-workbench-rmladapter:
+    container_name: rmladapter_ldes-replication
+    image: ldes/ldi-orchestrator:1.5.0-SNAPSHOT
+    environment:
+      - SPRING_CONFIG_NAME=application
+      - SPRING_CONFIG_LOCATION=/config/
+    volumes:
+      - ./ldio-rmladapter.yml:/config/application.yml:ro
+      - ./mapping.ttl:/ldio/mapping.ttl
+    ports:
+      - ${LDIO_WORKBENCH_PORT:-8083}:8080
+    networks:
+      - ldes
+    profiles:
+      - delay-started
+networks:
+  ldes:
+    name: quick_start_network
